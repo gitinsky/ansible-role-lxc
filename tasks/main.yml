@@ -1,0 +1,12 @@
+---
+- name: install lxc
+  yum: name=lxc state=latest
+
+- name: install lxc-templates
+  yum: name=lxc-templates state=latest
+
+- name: install libvirt-daemon-lxc
+  yum: name=libvirt-daemon-lxc state=latest
+
+- name: install libvirt
+  yum: name=libvirt state=latest
