@@ -31,4 +31,7 @@ lxc_vms:
 ```
 
 # Notes
+
+First container creation takes time. It took vagrant 53 minutes to start two different containers.
+
 Tested on ubuntu 14.04 with ubuntu 12.04 and 14.04 containers, ansible 1.8.2

@@ -40,14 +40,16 @@ Vagrant.configure(2) do |config|
           type: "ubuntu",
           revision: "precise",
           servername: "test1.example.com",
-          http_port: 5000
+          http_port: 5000,
+          https: true
         },
         {
           name: "test2",
           type: "ubuntu",
           revision: "trusty",
           servername: "test2.example.com",
-          http_port: 5000
+          http_port: 5000,
+          https: false
         },
       ]
     }
