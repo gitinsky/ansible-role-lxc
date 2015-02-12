@@ -41,7 +41,6 @@
   when: "'RUNNING' not in item.stdout"
   register: lxc_vm_start
   failed_when: "'The container failed to start' in lxc_vm_start.stderr"
-  
 
 - name: check vm state
   shell: lxc-info -n {{ item.name }}
@@ -51,6 +50,10 @@
   with_items: lxc_vms
   tags:
       - config
+
+- name: autostart all the VMs
+  shell: lxc-autostart -n {{ item.item.name }}
+  with_items: lxc_vm_states.results
 
 #===  
 - name: nginx lxc config
