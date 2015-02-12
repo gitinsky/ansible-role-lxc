@@ -1,0 +1,14 @@
+- hosts: lxcs
+  sudo: yes
+  roles:
+    - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test1.example.com } 
+    - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test2.example.com } 
+    - role: lxc
+    
+  # tasks:
+  #   - name: define vm
+  #     virt: name=foo
+  #           command=define
+  #           uri=lxc:///
+  #   - name: start vm
+  #     virt: name=foo state=running uri=lxc:///
