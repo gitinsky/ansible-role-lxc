@@ -35,16 +35,18 @@ Vagrant.configure(2) do |config|
       hbase_standalone: true,
       lxc_vms:
       [
-        # {
-        #   name: "test01",
-        #   type: "ubuntu",
-        #   revision: "precise",
-        # },
         {
-          name: "demo",
+          name: "test1",
           type: "ubuntu",
           revision: "precise",
           servername: "test1.example.com",
+          http_port: 5000
+        },
+        {
+          name: "test2",
+          type: "ubuntu",
+          revision: "trusty",
+          servername: "test2.example.com",
           http_port: 5000
         },
       ]
