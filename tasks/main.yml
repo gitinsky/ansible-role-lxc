@@ -10,8 +10,15 @@
   with_items:
       - lxc
       - lxc-templates
+  tags:
+      - install
+
+- name: install specific deps
+  apt: name={{ item }} state=latest
+  with_items:
       - libvirt-daemon-lxc
       - libvirt
+  when: ansible_distribution_version == 12.04
   tags:
       - install
 
