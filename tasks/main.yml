@@ -124,8 +124,16 @@
   tags:
       - config
 
+- name: "lxc container: get home dir of a user"
+  shell: "lxc-attach -n {{ item.item.name }} -- bash -c \"getent passwd {{ ansible_ssh_user }} | cut -d: -f6\""
+  register: ssh_user_home_dir
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
 - name: "lxc container: fill in .ssh/authorized_keys"
-  shell: "echo {{ lookup('file', '~/.ssh/id_rsa.pub') }} >  /var/lib/lxc/{{ item.item.name }}/rootfs/home/{{ ansible_ssh_user }}/.ssh/authorized_keys"
+  shell: "echo {{ lookup('file', '~/.ssh/id_rsa.pub') }} >  /var/lib/lxc/{{ item.item.name }}/rootfs{{ ssh_user_home_dir.results[0].stdout }}/.ssh/authorized_keys"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   tags:
