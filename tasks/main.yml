@@ -152,3 +152,15 @@
   when: "'RUNNING' in item.stdout"
   tags:
       - config
+
+- name: check VMs ip addresses
+  shell: lxc-info -i -n {{ item.name }}
+  failed_when: false
+  register: lxc_vm_ips
+  changed_when: false
+  with_items: lxc_vms
+
+- name: report VMs addresses
+  debug: msg="container {{ item.item.servername }} = {{ item.stdout }}"
+  with_items: lxc_vm_ips.results
+  
