@@ -78,7 +78,7 @@
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
 
 - name: check vm state
-  shell: "{ lxc-info -n test1 && grep ' test1 ' /var/lib/misc/dnsmasq.leases|awk '{ print \"IP: \" $3}'; } | column -t"
+  shell: "{ lxc-info -n {{ item.name }} && grep ' {{ item.name }} ' /var/lib/misc/dnsmasq.leases|awk '{ print \"IP: \" $3}'; } | column -t"
   failed_when: false
   register: lxc_vm_states
   changed_when: false
