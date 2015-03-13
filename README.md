@@ -34,4 +34,10 @@ lxc_vms:
 
 First container creation takes time. It took vagrant 53 minutes to start two different containers.
 
-Tested on ubuntu 14.04 with ubuntu 12.04 and 14.04 containers, ansible 1.8.2
+Tested on ubuntu 14.04 and 12.04 with ubuntu 12.04 and 14.04 containers, ansible 1.8.4
+
+Fo user installation kernel should be at least 3.5.. To update it on 12.04, run
+
+```
+sudo apt-get install linux-image-generic-lts-raring linux-headers-generic-lts-raring
+```

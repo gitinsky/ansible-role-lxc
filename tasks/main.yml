@@ -9,18 +9,26 @@
   apt: name={{ item }} state=latest
   with_items:
       - lxc
-      - lxc-templates
   tags:
       - install
+  
+- name: install deps
+  apt: name={{ item }} state=latest
+  with_items:
+      - lxc-templates
+  tags:
+      - install    
+  ignore_errors: True
 
 - name: install specific deps
   apt: name={{ item }} state=latest
   with_items:
       - libvirt-daemon-lxc
       - libvirt
-  when: ansible_distribution_version == 12.04
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
   tags:
       - install
+  ignore_errors: True
 
 - name: check if vm exists
   shell: lxc-info -n {{ item.name }}
@@ -28,9 +36,19 @@
   register: lxc_vm_states
   changed_when: false
   with_items: lxc_vms
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
   
+- name: check if vm exists
+  shell: lxc-ls -1|grep '^{{ item.name }}$'|| echo "{{ item.name }} doesn't exist" >&2
+  failed_when: false
+  register: lxc_vm_states
+  changed_when: false
+  with_items: lxc_vms
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+#'"
+
 - name: create lxc vm
-  shell: lxc-create -o /tmp/lxc_{{ item.item.name }}.log -t {{ item.item.type }} -n {{ item.item.name }} -- -r {{ item.item.revision }}
+  shell: lxc-create -t {{ item.item.type }} -n {{ item.item.name }} -- -r {{ item.item.revision }}
   with_items: lxc_vm_states.results
   register: lxc_vm_creation
   when: "'doesn\\'t exist' in item.stderr"
@@ -57,10 +75,23 @@
   with_items: lxc_vms
   tags:
       - config
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+
+- name: check vm state
+  shell: "{ lxc-info -n test1 && grep ' test1 ' /var/lib/misc/dnsmasq.leases|awk '{ print \"IP: \" $3}'; } | column -t"
+  failed_when: false
+  register: lxc_vm_states
+  changed_when: false
+  with_items: lxc_vms
+  tags:
+      - config
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+#"'
 
 - name: autostart all the VMs
   shell: lxc-autostart -n {{ item.item.name }}
   with_items: lxc_vm_states.results
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
 
 #===  
 - name: nginx lxc config
@@ -81,7 +112,7 @@
 
 #== install user
 - name: "lxc container: install sudoers file"
-  shell: "lxc-attach -n {{ item.item.name }} -- install -m 440 /dev/null /etc/sudoers.d/wheel-nopasswd"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -m 440 /dev/null /etc/sudoers.d/wheel-nopasswd"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   tags:
@@ -95,7 +126,7 @@
       - config
 
 - name: "lxc container: groupadd wheel"
-  shell: "lxc-attach -n {{ item.item.name }} -- groupadd wheel"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/groupadd wheel"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   failed_when: false
@@ -103,7 +134,7 @@
       - config
 
 - name: "lxc container: useradd"
-  shell: "lxc-attach -n {{ item.item.name }} -- useradd -m -c \"{{ ansible_ssh_user }}@$(hostname)\" -s /bin/bash {{ ansible_ssh_user }}"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/useradd -m -c \"{{ ansible_ssh_user }}@$(hostname)\" -s /bin/bash {{ ansible_ssh_user }}"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   failed_when: false
@@ -111,21 +142,21 @@
       - config
 
 - name: "lxc container: create .ssh"
-  shell: "lxc-attach -n {{ item.item.name }} -- install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 750 -d ~{{ ansible_ssh_user }}/.ssh"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 750 -d ~{{ ansible_ssh_user }}/.ssh"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   tags:
       - config
 
 - name: "lxc container: install .ssh/authorized_keys"
-  shell: "lxc-attach -n {{ item.item.name }} -- install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 640 /dev/null ~{{ ansible_ssh_user }}/.ssh/authorized_keys"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 640 /dev/null ~{{ ansible_ssh_user }}/.ssh/authorized_keys"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   tags:
       - config
 
 - name: "lxc container: get home dir of a user"
-  shell: "lxc-attach -n {{ item.item.name }} -- bash -c \"getent passwd {{ ansible_ssh_user }} | cut -d: -f6\""
+  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c \"getent passwd {{ ansible_ssh_user }} | cut -d: -f6\""
   register: ssh_user_home_dir
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
@@ -140,25 +171,25 @@
       - config
 
 - name: "lxc container: add user to group wheel"
-  shell: "lxc-attach -n {{ item.item.name }} -- addgroup {{ ansible_ssh_user }} wheel"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/addgroup {{ ansible_ssh_user }} wheel"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   tags:
       - config
 
 - name: "lxc container: install python"
-  shell: "lxc-attach -n {{ item.item.name }} -- apt-get install -y python"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   tags:
       - config
 
 - name: check VMs ip addresses
-  shell: lxc-ls -f
+  shell: cat /var/lib/misc/dnsmasq*leases|awk {'print $4,$3'}|column -t
   failed_when: false
   register: lxc_vm_ips
   changed_when: false
+# lxc-ls -f
 
 - name: report VMs addresses
-  debug: msg="container {{ lxc_vm_ips.stdout }}"
-  
+  debug: var=lxc_vm_ips.stdout_lines
