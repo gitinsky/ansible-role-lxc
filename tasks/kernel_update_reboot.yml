@@ -1,0 +1,19 @@
+---
+- name: Check for reboot hint.
+  shell: if [ $(readlink -f /vmlinuz) != /boot/vmlinuz-$(uname -r) ]; then echo 'reboot'; else echo 'no'; fi
+  ignore_errors: true
+  register: reboot_hint
+
+- name: Rebooting ...
+  command: shutdown -r now "Ansible kernel update applied"
+  async: 0
+  poll: 0
+  ignore_errors: true
+  when: kernelup|changed or reboot_hint.stdout.find("reboot") != -1
+  register: rebooting
+
+- name: Wait for thing to reboot...
+  pause: seconds={{ wait_for_reboot }}
+  when: rebooting|changed
+
+# © http://codepoets.co.uk/2014/ansible-random-things/

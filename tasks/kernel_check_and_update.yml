@@ -1,0 +1,21 @@
+---
+- name: lxc_minimal_kernel_version
+  debug: var=lxc_minimal_kernel_version
+
+- name: ansible_kernel
+  debug: var=ansible_kernel
+
+- name: Shall I update kernel?
+  debug: var={{ ansible_kernel | version_compare(lxc_minimal_kernel_version, '<') }}
+  
+- name: update kernel
+  apt: name={{ item }}
+  with_items:
+      - linux-image-generic-lts-raring
+      - linux-headers-generic-lts-raring
+  when: ansible_kernel | version_compare(lxc_minimal_kernel_version, '<')
+  register: kernelup
+
+#  state=latest
+- include: kernel_update_reboot.yml
+  

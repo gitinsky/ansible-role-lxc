@@ -1,0 +1,184 @@
+---
+- name: check if vm exists
+  shell: lxc-info -n {{ item.name }}
+  failed_when: false
+  register: lxc_vm_states_14
+  changed_when: false
+  with_items: lxc_vms
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  
+- name: check if vm exists
+  shell: lxc-ls -1|grep '^{{ item.name }}$'|| echo "{{ item.name }} doesn't exist" >&2
+  failed_when: false
+  register: lxc_vm_states_12
+  changed_when: false
+  with_items: lxc_vms
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+#'"
+
+- name: define lxc_vm_states
+  set_fact:
+     lxc_vm_states: "{{ lxc_vm_states_14 }}"
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+
+- name: define lxc_vm_states
+  set_fact:
+     lxc_vm_states: "{{ lxc_vm_states_12 }}"
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+
+- name: create lxc vm
+  shell: lxc-create -t {{ item.item.type }} -n {{ item.item.name }} -- -r {{ item.item.revision }}
+  with_items: lxc_vm_states.results
+  register: lxc_vm_creation
+  when: "'doesn\\'t exist' in item.stderr"
+
+- name: check vm state
+  shell: lxc-info -n {{ item.name }}
+  failed_when: false
+  register: lxc_vm_states
+  changed_when: false
+  with_items: lxc_vms
+
+- name: start lxc vm
+  shell: lxc-start -n {{ item.item.name }} -d
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' not in item.stdout"
+  register: lxc_vm_start
+  failed_when: "'The container failed to start' in lxc_vm_start.stderr"
+
+- name: check vm state
+  shell: lxc-info -n {{ item.name }}
+  failed_when: false
+  register: lxc_vm_states_14
+  changed_when: false
+  with_items: lxc_vms
+  tags:
+      - config
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+
+- name: check vm state
+  shell: "{ lxc-info -n {{ item.name }} && grep ' {{ item.name }} ' /var/lib/misc/dnsmasq.leases|awk '{ print \"IP: \" $3}'; } | column -t"
+  failed_when: false
+  register: lxc_vm_states_12
+  changed_when: false
+  with_items: lxc_vms
+  tags:
+      - config
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+#"'
+
+- name: define lxc_vm_states
+  set_fact:
+     lxc_vm_states: "{{ lxc_vm_states_14 }}"
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  
+- name: define lxc_vm_states
+  set_fact:
+     lxc_vm_states: "{{ lxc_vm_states_12 }}"
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+
+- name: autostart all the VMs
+  shell: lxc-autostart -n {{ item.item.name }}
+  with_items: lxc_vm_states.results
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+
+#===  
+- name: nginx lxc config
+  template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: enable nginx lxc config
+  file: state=link src=../sites-available/lxc-{{ item.item.name }}.conf dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+#== install user
+- name: "lxc container: install sudoers file"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -m 440 /dev/null /etc/sudoers.d/wheel-nopasswd"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: "lxc container: fill in the sudoers file"
+  shell: "echo '%wheel        ALL=(ALL) NOPASSWD: ALL' > /var/lib/lxc/{{ item.item.name }}/rootfs/etc/sudoers.d/wheel-nopasswd"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: "lxc container: groupadd wheel"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/groupadd wheel"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  failed_when: false
+  tags:
+      - config
+
+- name: "lxc container: useradd"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/useradd -m -c \"{{ ansible_ssh_user }}@$(hostname)\" -s /bin/bash {{ ansible_ssh_user }}"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  failed_when: false
+  tags:
+      - config
+
+- name: "lxc container: create .ssh"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 750 -d ~{{ ansible_ssh_user }}/.ssh"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: "lxc container: install .ssh/authorized_keys"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 640 /dev/null ~{{ ansible_ssh_user }}/.ssh/authorized_keys"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: "lxc container: get home dir of a user"
+  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c \"getent passwd {{ ansible_ssh_user }} | cut -d: -f6\""
+  register: ssh_user_home_dir
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: "lxc container: fill in .ssh/authorized_keys"
+  shell: "echo {{ lookup('file', '~/.ssh/id_rsa.pub') }} >  /var/lib/lxc/{{ item.item.name }}/rootfs{{ ssh_user_home_dir.results[0].stdout }}/.ssh/authorized_keys"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: "lxc container: add user to group wheel"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/addgroup {{ ansible_ssh_user }} wheel"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: "lxc container: install python"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  tags:
+      - config
+
+- name: check VMs ip addresses
+  shell: cat /var/lib/misc/dnsmasq*leases|awk {'print $4,$3'}|column -t
+  failed_when: false
+  register: lxc_vm_ips
+  changed_when: false
+# lxc-ls -f
+
+- name: report VMs addresses
+  debug: var=lxc_vm_ips.stdout_lines

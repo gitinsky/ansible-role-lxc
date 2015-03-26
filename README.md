@@ -30,6 +30,8 @@ lxc_vms:
 
 ```
 
+There’s also an ```update_kernel_if_required``` variable. If you set it to ```true```, your 12.04 ubuntu might get a kernel update. Your system will be rebooted in this case!
+
 # Notes
 
 First container creation takes time. It took vagrant 53 minutes to start two different containers.
