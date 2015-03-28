@@ -1,0 +1,27 @@
+language: ruby
+rvm:
+  - 1.9.3
+install:
+  - sudo wget -nv https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb
+  - sudo dpkg -i vagrant_1.7.2_x86_64.deb
+  - curl https://www.virtualbox.org/download/oracle_vbox.asc | sudo apt-key add -
+  - echo "deb http://download.virtualbox.org/virtualbox/debian/ precise contrib" | sudo tee -a /etc/apt/sources.list
+  - sudo apt-get update -qq
+  - sudo apt-get install -y virtualbox-4.3 dkms python git software-properties-common
+  - sudo apt-add-repository -y ppa:ansible/ansible
+  - sudo apt-get update
+  - sudo apt-get install -y ansible
+  - mkdir -vp examples/roles
+  - git clone https://github.com/gitinsky/ansible-role-common-utils.git examples/roles/common-utils
+  - git clone https://github.com/gitinsky/ansible-role-certificates.git examples/roles/certificates
+  - git clone https://github.com/gitinsky/ansible-role-nginx.git        examples/roles/nginx
+  - ln -vs ../../ examples/roles/lxc
+before_script:
+  - cd examples/roles/common-utils && git pull && cd ../../../
+  - cd examples/roles/certificates && git pull && cd ../../../
+  - cd examples/roles/nginx        && git pull && cd ../../../
+script:
+  - vagrant up --no-provision lxc_12
+  - vagrant provision lxc_12
+  - vagrant up --no-provision lxc_14
+  - vagrant provision lxc_14
