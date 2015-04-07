@@ -2,7 +2,9 @@ language: ruby
 rvm:
   - 1.9.3
 install:
-  - sudo wget -nv https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb
+  # git clone --depth=50 --branch=master git://github.com/gitinsky/ansible-role-lxc.git gitinsky/ansible-role-lxc && cd gitinsky/ansible-role-lxc
+  # sudo apt-get install -y software-properties-common python-software-properties wget curl git
+  - sudo wget -c https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb
   - sudo dpkg -i vagrant_1.7.2_x86_64.deb
   - curl https://www.virtualbox.org/download/oracle_vbox.asc | sudo apt-key add -
   - echo "deb http://download.virtualbox.org/virtualbox/debian/ precise contrib" | sudo tee -a /etc/apt/sources.list
@@ -20,7 +22,13 @@ before_script:
   - cd examples/roles/common-utils && git pull && cd ../../../
   - cd examples/roles/certificates && git pull && cd ../../../
   - cd examples/roles/nginx        && git pull && cd ../../../
+  - VBoxManage --version
+  - ls
+  - pwd
+  - uname -a
+  - uname -r
 script:
+  - sudo modprobe vboxdrv
   - vagrant up --no-provision lxc_12
   - vagrant provision lxc_12
   - vagrant up --no-provision lxc_14
