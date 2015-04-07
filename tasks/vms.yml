@@ -178,7 +178,40 @@
   failed_when: false
   register: lxc_vm_ips
   changed_when: false
+  tags: report
 # lxc-ls -f
 
+- name: check VMs ip addresses without formatting output
+  shell: cat /var/lib/misc/dnsmasq*leases|awk {'print $4,$3'}
+  failed_when: false
+  register: lxc_vm_ips_raw
+  changed_when: false
+  tags: report
+
+- name: set ssh_config_line
+  set_fact:
+    ssh_config_line: "Host {{ lxc_vm_ips_raw.stdout|replace(' ','\n    ProxyCommand ssh -q ' + inventory_hostname + ' nc -q0 ')|replace('\n',' 22\nHost ')|replace(' 22\nHost     ProxyCommand','\n     ProxyCommand') }} 22"
+  tags: report
+
+# - name: set ssh_config_line_domains
+#   set_fact:
+#     ssh_config_line_domains: "{{ ssh_config_line }}"
+#   tags: report
+
+# - name: set ssh_config_line_domains
+#   set_fact:
+#     ssh_config_line_domains: "{{ ssh_config_line_domains|replace(item.name,item.servername) }}"
+#   with_items: lxc_vms
+#   tags: report
+  
 - name: report VMs addresses
   debug: var=lxc_vm_ips.stdout_lines
+  tags: report
+
+- name: ssh_config_line
+  debug: var=ssh_config_line.split('\n')
+  tags: report
+
+# - name: ssh_config_line_domains
+#   debug: var=ssh_config_line_domains.split('\n')
+#   tags: report
