@@ -14,7 +14,8 @@ install:
   - sudo apt-get update
   - sudo apt-get install -y ansible
   # - sudo apt-get install linux-headers-$(uname -r)
-  - sudo apt-get install linux-headers-generic linux-headers-virtual
+  - sudo apt-get install -y linux-headers-generic linux-headers-virtual
+  - sudo apt-get install -y linux-image-generic-lts-raring linux-headers-generic-lts-raring
   - mkdir -vp examples/roles
   - git clone https://github.com/gitinsky/ansible-role-common-utils.git examples/roles/common-utils
   - git clone https://github.com/gitinsky/ansible-role-certificates.git examples/roles/certificates
@@ -31,6 +32,7 @@ before_script:
   - pwd
   - uname -a
   - uname -r
+  - sudo reboot
 script:
   - sudo modprobe vboxdrv
   - vagrant up --no-provision lxc_12
