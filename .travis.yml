@@ -23,6 +23,8 @@ before_script:
   - cd examples/roles/certificates && git pull && cd ../../../
   - cd examples/roles/nginx        && git pull && cd ../../../
   - VBoxManage --version
+  - sudo /etc/init.d/vboxdrv setup
+  - VBoxManage --version
   - ls
   - pwd
   - uname -a
