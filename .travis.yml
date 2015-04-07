@@ -34,6 +34,11 @@ before_script:
 script:
   - sudo modprobe vboxdrv
   - vagrant up --no-provision lxc_12
+  - vagrant halt -f lxc_12
+  - VBoxManage modifyvm lxc_12 --uart1 0x3F8 4 --uartmode1 file "/tmp/lxc_12"
+  - vagrant up --no-provision lxc_12
+  - cat /tmp/lxc_12
   - vagrant provision lxc_12
+  - cat /tmp/lxc_12
   - vagrant up --no-provision lxc_14
   - vagrant provision lxc_14
