@@ -6,6 +6,8 @@ git clone https://github.com/gitinsky/ansible-role-lxc.git roles/lxc
 git clone https://github.com/gitinsky/ansible-role-nginx.git roles/nginx
 ```
 
+You can disable nginx for the whole role with ```lxc_force_skip_nginx_for_all_vms: true```, nginx role will not be included in dependencies in this case. You can also disable nginx configs for individual containers, they will be deleted if already installed. See variables section.
+
 Optional: clone [certificates](https://github.com/gitinsky/ansible-role-certificates) role with ```git clone https://github.com/gitinsky/ansible-role-certificates.git roles/certificates```
 
 # Examples
@@ -27,6 +29,7 @@ You can define your containers in ```lxc_vms```, they will be automatically crea
 lxc_vms:
   - { name: "test1", type: "ubuntu", revision: "trusty",  servername: "test1.example.com", http_port: 5000, https: on }
   - { name: "test2", type: "ubuntu", revision: "precise", servername: "test2.example.com", http_port: 80,   https: off }
+  - { name: "test3", type: "ubuntu", revision: "precise", no_nginx: true}
 
 ```
 

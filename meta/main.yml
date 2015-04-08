@@ -1,4 +1,4 @@
 ---
 dependencies:
   - { role: common-utils }
-  - { role: nginx }
+  - { role: nginx, when: not lxc_force_skip_nginx_for_all_vms }

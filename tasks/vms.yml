@@ -83,21 +83,38 @@
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
 
 #===  
-- name: nginx lxc config
+- name: put nginx lxc config if required
   template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
   notify: reload nginx
   with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout"
+  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
   tags:
       - config
 
-- name: enable nginx lxc config
+- name: enable nginx lxc config if required
   file: state=link src=../sites-available/lxc-{{ item.item.name }}.conf dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
   notify: reload nginx
   with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout"
+  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
   tags:
       - config
+
+- name: ensure nginx configs are not enabled if configured so
+  file: state=absent dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
+  tags:
+      - config
+
+- name: ensure nginx configs are to presented if configured so
+  file: state=absent dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
+  tags:
+      - config
+
 
 #== install user
 - name: "lxc container: install sudoers file"
