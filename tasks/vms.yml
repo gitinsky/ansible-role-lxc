@@ -82,6 +82,11 @@
   with_items: lxc_vm_states.results
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
 
+- name: autostart all the VMs
+  file: state=link src=/var/lib/lxc/{{ item.item.name }}/config dest=/etc/lxc/auto/{{ item.item.name }}
+  with_items: lxc_vm_states.results
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+
 #===  
 - name: put nginx lxc config if required
   template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
