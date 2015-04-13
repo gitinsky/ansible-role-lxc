@@ -47,13 +47,12 @@
   failed_when: "'The container failed to start' in lxc_vm_start.stderr"
 
 - name: check vm state
-  shell: lxc-info -n {{ item.name }}
+  shell: "{ lxc-info -n {{ item.name }}|grep -v 'IP:' && grep ' {{ item.name }} ' /var/lib/misc/dnsmasq.*leases|awk '{ print \"IP: \" $3}'; } | column -t"
   failed_when: false
   register: lxc_vm_states_14
   changed_when: false
   with_items: lxc_vms
-  tags:
-      - config
+  tags: config
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
 
 - name: check vm state
@@ -62,8 +61,7 @@
   register: lxc_vm_states_12
   changed_when: false
   with_items: lxc_vms
-  tags:
-      - config
+  tags: config
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
 #"'
 
@@ -71,11 +69,13 @@
   set_fact:
      lxc_vm_states: "{{ lxc_vm_states_14 }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  tags: config
   
 - name: define lxc_vm_states
   set_fact:
      lxc_vm_states: "{{ lxc_vm_states_12 }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+  tags: config
 
 - name: autostart all the VMs
   shell: lxc-autostart -n {{ item.item.name }}
@@ -126,74 +126,54 @@
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -m 440 /dev/null /etc/sudoers.d/wheel-nopasswd"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: "lxc container: fill in the sudoers file"
   shell: "echo '%wheel        ALL=(ALL) NOPASSWD: ALL' > /var/lib/lxc/{{ item.item.name }}/rootfs/etc/sudoers.d/wheel-nopasswd"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: "lxc container: groupadd wheel"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/groupadd wheel"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   failed_when: false
-  tags:
-      - config
 
 - name: "lxc container: useradd"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/useradd -m -c \"{{ ansible_ssh_user }}@$(hostname)\" -s /bin/bash {{ ansible_ssh_user }}"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   failed_when: false
-  tags:
-      - config
 
 - name: "lxc container: create .ssh"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 750 -d ~{{ ansible_ssh_user }}/.ssh"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: "lxc container: install .ssh/authorized_keys"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 640 /dev/null ~{{ ansible_ssh_user }}/.ssh/authorized_keys"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: "lxc container: get home dir of a user"
   shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c \"getent passwd {{ ansible_ssh_user }} | cut -d: -f6\""
   register: ssh_user_home_dir
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: "lxc container: fill in .ssh/authorized_keys"
   shell: "echo {{ lookup('file', '~/.ssh/id_rsa.pub') }} >  /var/lib/lxc/{{ item.item.name }}/rootfs{{ ssh_user_home_dir.results[0].stdout }}/.ssh/authorized_keys"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: "lxc container: add user to group wheel"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/addgroup {{ ansible_ssh_user }} wheel"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: "lxc container: install python"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
-  tags:
-      - config
 
 - name: check VMs ip addresses
   shell: cat /var/lib/misc/dnsmasq*leases|awk {'print $4,$3'}|column -t
