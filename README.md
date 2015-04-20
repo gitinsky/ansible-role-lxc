@@ -35,6 +35,24 @@ lxc_vms:
 
 There’s also an ```update_kernel_if_required``` variable. If you set it to ```true```, your 12.04 ubuntu might get a kernel update. Your system will be rebooted in this case!
 
+# ssh configuration
+
+There’s a ```generate_sshconf``` variable enabled by default. It it’s on, role will generate ssh proxy command configuration for the lxc vms at your ```/.ssh/config.d``` directory. You’ll have to merge it to ```/.ssh/config``` yourself. Here’s the script I use:
+
+```
+#!/bin/bash
+ls ~/.ssh/config.d/ | {
+    echo -n '' > ~/.ssh/config
+    while read file
+    do
+        cat ~/.ssh/config.d/$file >> ~/.ssh/config
+        echo '' >> ~/.ssh/config
+    done
+}
+```
+
+There’s also an ```sshconf``` tag that could be used right for ssh configuration generation
+
 # Notes
 
 First container creation takes time. It took vagrant 53 minutes to start two different containers.

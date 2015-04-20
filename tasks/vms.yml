@@ -52,7 +52,9 @@
   register: lxc_vm_states_14
   changed_when: false
   with_items: lxc_vms
-  tags: config
+  tags:
+    - config
+    - sshconf
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
 
 - name: check vm state
@@ -61,7 +63,9 @@
   register: lxc_vm_states_12
   changed_when: false
   with_items: lxc_vms
-  tags: config
+  tags: 
+    - config
+    - sshconf
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
 #"'
 
@@ -69,13 +73,17 @@
   set_fact:
      lxc_vm_states: "{{ lxc_vm_states_14 }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
-  tags: config
+  tags: 
+    - config
+    - sshconf
   
 - name: define lxc_vm_states
   set_fact:
      lxc_vm_states: "{{ lxc_vm_states_12 }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
-  tags: config
+  tags:
+    - config
+    - sshconf
 
 - name: autostart all the VMs
   shell: lxc-autostart -n {{ item.item.name }}
@@ -217,3 +225,16 @@
 # - name: ssh_config_line_domains
 #   debug: var=ssh_config_line_domains.split('\n')
 #   tags: report
+
+
+- name: create local directory ~/.ssh/config.d
+  local_action: file dest=~/.ssh/config.d state=directory
+  sudo: no
+  tags: sshconf
+  when: generate_sshconf
+  
+- name: add proxy commands for vms
+  local_action: template src=ssh/lxc.conf.jinja dest=~/.ssh/config.d/lxc-{{ inventory_hostname }}.conf
+  sudo: no
+  tags: sshconf
+  when: generate_sshconf

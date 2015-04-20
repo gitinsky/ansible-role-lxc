@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+
+{% for result in lxc_vm_states.results %}
+Host
+{%- if result.item.servername is defined %}
+ {{ result.item.servername }}
+{% else %}
+ {{ result.item.name }}.{{ inventory_hostname }}
+{% endif %}
+  ProxyCommand ssh -q {{ inventory_hostname }} nc -q0
+    {%- set ips_found_for_vm = 0 -%}
+      {%- for info in result.stdout.split('\n') -%}
+        {% if 'IP:' in info and ips_found_for_vm < 1 %}
+          {%- set ips_found_for_vm = 1 %}
+ {{ info.split(' ')|last }}
+        {%- endif %}
+    {%- endfor %}
+ 22
+{% endfor %}
+
+
