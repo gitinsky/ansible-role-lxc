@@ -1,5 +1,7 @@
 - hosts: lxcs
   sudo: yes
+  vars:
+    generate_sshconf: no
   roles:
     - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test1.example.com } 
     - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test2.example.com } 
