@@ -47,7 +47,7 @@
   failed_when: "'The container failed to start' in lxc_vm_start.stderr"
 
 - name: check vm state
-  shell: "{ lxc-info -n {{ item.name }}|grep -v 'IP:' && grep ' {{ item.name }} ' /var/lib/misc/dnsmasq.*leases|awk '{ print \"IP: \" $3}'; } | column -t"
+  shell: "{ lxc-info -n {{ item.name }}|grep -v 'IP:' && grep \" $( grep lxc.network.hwaddr /var/lib/lxc/{{ item.name }}/config|sed -E 's/.*=[ ]{0,}//' ) \" /var/lib/misc/dnsmasq.*leases|awk '{ print \"IP: \" $3}'; } | column -t"
   failed_when: false
   register: lxc_vm_states_14
   changed_when: false
