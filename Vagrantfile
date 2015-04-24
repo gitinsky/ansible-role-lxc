@@ -11,6 +11,7 @@ Vagrant.configure(2) do |config|
       v.name = "lxc_12"
       # v.gui = true
     end
+    lxc_12_cfg.ssh.insert_key = false
   end
   
   config.vm.define "lxc_14" do |lxc_14_cfg|
@@ -18,38 +19,44 @@ Vagrant.configure(2) do |config|
     lxc_14_cfg.vm.provider :virtualbox do |v|
       v.name = "lxc_14"
     end
+    lxc_14_cfg.ssh.insert_key = false
   end
   
+  i = 0;
   config.vm.provision :ansible do |ansible|
-    ansible.playbook = "examples/lxc.yml"
-    # ansible.verbose = "vvv"
-    ansible.sudo = true
-    # ansible.tags = ['debug']
-    ansible.groups = {
-      "lxcs" => ["lxc_12", "lxc_14"],
-    }
-    ansible.extra_vars = {
-      update_kernel_if_required: true,
-      wait_for_reboot: 15,
-      lxc_vms:
-      [
-        {
-          name: "test1",
-          type: "ubuntu",
-          revision: "precise",
-          servername: "test1.example.com",
-          http_port: 5000,
-          https: true
-        },
-        {
-          name: "test2",
-          type: "ubuntu",
-          revision: "trusty",
-          servername: "test2.example.com",
-          http_port: 5000,
-          https: false
-        },
-      ]
-    }
+    if i <= 0
+      ansible.playbook = "examples/lxc.yml"
+      # ansible.verbose = "vvv"
+      ansible.sudo = true
+      # ansible.tags = ['debug']
+      ansible.groups = {
+        "lxcs" => ["lxc_12", "lxc_14"],
+      }
+      ansible.extra_vars = {
+        update_kernel_if_required: true,
+        wait_for_reboot: 15,
+        lxc_vms:
+        [
+          {
+            name: "test1",
+            type: "ubuntu",
+            revision: "precise",
+            servername: "test1.example.com",
+            http_port: 5000,
+            https: true
+          },
+          {
+            name: "test2",
+            type: "ubuntu",
+            revision: "trusty",
+            servername: "test2.example.com",
+            http_port: 5000,
+            https: false
+          },
+        ]
+      }
+      ansible.limit = 'all'
+      i+=1;
+    end
   end
 end
