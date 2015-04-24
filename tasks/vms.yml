@@ -116,13 +116,13 @@
 #=== remove user ubuntu
 
 - name: "lxc container: kill all processes under 'ubuntu' user"
-  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/nill 2>&1 && /bin/ps -u ubuntu| /bin/sed 1d| while read pid s; do echo \"pid=$pid\"; kill -9 $pid; done'"
+  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/null 2>&1 && /bin/ps -u ubuntu| /bin/sed 1d| while read pid s; do echo \"pid=$pid\"; kill -9 $pid; done'"
   failed_when: false
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: remove user ubuntu"
-  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/nill 2>&1 && /usr/sbin/userdel -rf ubuntu'"
+  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/null 2>&1 && /usr/sbin/userdel -rf ubuntu'"
   failed_when: false
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
