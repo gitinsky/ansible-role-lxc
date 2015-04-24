@@ -46,44 +46,7 @@
   register: lxc_vm_start
   failed_when: "'The container failed to start' in lxc_vm_start.stderr"
 
-- name: check vm state
-  shell: "{ lxc-info -n {{ item.name }}|grep -v 'IP:' && grep \" $( grep lxc.network.hwaddr /var/lib/lxc/{{ item.name }}/config|sed -E 's/.*=[ ]{0,}//' ) \" /var/lib/misc/dnsmasq.*leases|awk '{ print \"IP: \" $3}'; } | column -t"
-  failed_when: false
-  register: lxc_vm_states_14
-  changed_when: false
-  with_items: lxc_vms
-  tags:
-    - config
-    - sshconf
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
-
-- name: check vm state
-  shell: "{ lxc-info -n {{ item.name }} && grep ' {{ item.name }} ' /var/lib/misc/dnsmasq.leases|awk '{ print \"IP: \" $3}'; } | column -t"
-  failed_when: false
-  register: lxc_vm_states_12
-  changed_when: false
-  with_items: lxc_vms
-  tags: 
-    - config
-    - sshconf
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
-#"'
-
-- name: define lxc_vm_states
-  set_fact:
-     lxc_vm_states: "{{ lxc_vm_states_14 }}"
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
-  tags: 
-    - config
-    - sshconf
-  
-- name: define lxc_vm_states
-  set_fact:
-     lxc_vm_states: "{{ lxc_vm_states_12 }}"
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
-  tags:
-    - config
-    - sshconf
+- include: vmstates.yml
 
 - name: autostart all the VMs
   shell: lxc-autostart -n {{ item.item.name }}
@@ -94,40 +57,6 @@
   file: state=link src=/var/lib/lxc/{{ item.item.name }}/config dest=/etc/lxc/auto/{{ item.item.name }}
   with_items: lxc_vm_states.results
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
-
-#===  
-- name: put nginx lxc config if required
-  template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
-  notify: reload nginx
-  with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
-  tags:
-      - config
-
-- name: enable nginx lxc config if required
-  file: state=link src=../sites-available/lxc-{{ item.item.name }}.conf dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
-  notify: reload nginx
-  with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
-  tags:
-      - config
-
-- name: ensure nginx configs are not enabled if configured so
-  file: state=absent dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
-  notify: reload nginx
-  with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
-  tags:
-      - config
-
-- name: ensure nginx configs are to presented if configured so
-  file: state=absent dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
-  notify: reload nginx
-  with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
-  tags:
-      - config
-
 
 #== install user
 - name: "lxc container: install sudoers file"
@@ -182,6 +111,45 @@
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
+
+#=== recollect VM info as IP addresses could have been missed in the first check
+
+- include: vmstates.yml
+
+#===  nginx stuff
+- name: put nginx lxc config if required
+  template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
+  tags:
+      - config
+
+- name: enable nginx lxc config if required
+  file: state=link src=../sites-available/lxc-{{ item.item.name }}.conf dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
+  tags:
+      - config
+
+- name: ensure nginx configs are not enabled if configured so
+  file: state=absent dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
+  tags:
+      - config
+
+- name: ensure nginx configs are to presented if configured so
+  file: state=absent dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
+  tags:
+      - config
+
+#==== reports stuff
 
 - name: check VMs ip addresses
   shell: cat /var/lib/misc/dnsmasq*leases|awk {'print $4,$3'}|column -t
