@@ -108,7 +108,22 @@
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: install python"
-  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
+  shell: "lxc-attach -n {{ item.item.name }} -- python --version || /usr/bin/apt-get install -y python"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+  retries: 5
+
+#=== remove user ubuntu
+
+- name: "lxc container: kill all processes under 'ubuntu' user"
+  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/nill 2>&1 && /bin/ps -u ubuntu| /bin/sed 1d| while read pid s; do echo \"pid=$pid\"; kill -9 $pid; done'"
+  failed_when: false
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout"
+
+- name: "lxc container: remove user ubuntu"
+  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/nill 2>&1 && /usr/sbin/userdel -rf ubuntu'"
+  failed_when: false
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
 
