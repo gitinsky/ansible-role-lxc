@@ -12,7 +12,7 @@ Optional: clone [certificates](https://github.com/gitinsky/ansible-role-certific
 
 # Examples
 #### playbook
-```
+```yml
 - hosts: lxcs
   sudo: yes
   roles:
@@ -25,7 +25,7 @@ Optional: clone [certificates](https://github.com/gitinsky/ansible-role-certific
 
 You can define your containers in ```lxc_vms```, they will be automatically created with the user used to ssh to the host and with your ```~/.ssh/id_rsa.pub``` key. There's also a dirty task to install python with apt-get to get containers ready for ansible. Nginx will be configured to point hostnames to there containers, SNI is supported so you can have multiple https names.
 
-```
+```yml
 lxc_vms:
   - { name: "test1", type: "ubuntu", revision: "trusty",  servername: "test1.example.com", http_port: 5000, https: on }
   - { name: "test2", type: "ubuntu", revision: "precise", servername: "test2.example.com", http_port: 80,   https: off }
@@ -35,11 +35,17 @@ lxc_vms:
 
 There’s also an ```update_kernel_if_required``` variable. If you set it to ```true```, your 12.04 ubuntu might get a kernel update. Your system will be rebooted in this case!
 
+```yml
+lxc_domain: lxc
+```
+
+If ```lxc_domain``` is set ```LXC_DOMAIN``` option in a ```/etc/default/lxc-net``` will be set to it's value. 
+
 # ssh configuration
 
 There’s a ```generate_sshconf``` variable enabled by default. It it’s on, role will generate ssh proxy command configuration for the lxc vms at your ```/.ssh/config.d``` directory. You’ll have to merge it to ```/.ssh/config``` yourself. Here’s the script I use:
 
-```
+```bash
 #!/bin/bash
 ls ~/.ssh/config.d/ | {
     echo -n '' > ~/.ssh/config
