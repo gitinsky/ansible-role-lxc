@@ -1,5 +1,5 @@
 # lxc role
-This role install lxc, nginx and could set up containers and even proxy http for them. 
+This role install lxc, nginx and could set up containers and even proxy http for them.
 
 ```
 git clone https://github.com/gitinsky/ansible-role-lxc.git roles/lxc
@@ -16,8 +16,8 @@ Optional: clone [certificates](https://github.com/gitinsky/ansible-role-certific
 - hosts: lxcs
   sudo: yes
   roles:
-    - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test1.example.com } 
-    - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test2.example.com } 
+    - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test1.example.com }
+    - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test2.example.com }
     - role: lxc
 ```
 
@@ -28,7 +28,7 @@ You can define your containers in ```lxc_vms```, they will be automatically crea
 ```yml
 lxc_vms:
   - { name: "test1", type: "ubuntu", revision: "trusty",  servername: "test1.example.com", http_port: 5000, https: on }
-  - { name: "test2", type: "ubuntu", revision: "precise", servername: "test2.example.com", http_port: 80,   https: off }
+  - { name: "test2", type: "ubuntu", revision: "precise", servername: "test2.example.com", http_port: 80,   https: off, cors: on }
   - { name: "test3", type: "ubuntu", revision: "precise", no_nginx: true}
 
 ```
@@ -39,7 +39,7 @@ There’s also an ```update_kernel_if_required``` variable. If you set it to ```
 lxc_domain: lxc
 ```
 
-If ```lxc_domain``` is set ```LXC_DOMAIN``` option in a ```/etc/default/lxc-net``` will be set to it's value. 
+If ```lxc_domain``` is set ```LXC_DOMAIN``` option in a ```/etc/default/lxc-net``` will be set to it's value.
 
 # ssh configuration
 
