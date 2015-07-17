@@ -1,0 +1,10 @@
+{
+    "ansible_managed": "ansible_managed",
+    "item": {
+        "item": {
+            "https": 1,
+            "servername": "servername"
+        },
+        "stdout": "10.0.4.4"
+    }
+}

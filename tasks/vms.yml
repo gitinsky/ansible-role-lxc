@@ -6,6 +6,9 @@
   changed_when: false
   with_items: lxc_vms
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  tags:
+      - config
+      - nginx
   
 - name: check if vm exists
   shell: lxc-ls -1|grep '^{{ item.name }}$'|| echo "{{ item.name }} doesn't exist" >&2
@@ -14,17 +17,26 @@
   changed_when: false
   with_items: lxc_vms
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+  tags:
+      - config
+      - nginx
 #'"
 
 - name: define lxc_vm_states
   set_fact:
      lxc_vm_states: "{{ lxc_vm_states_14 }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  tags:
+      - config
+      - nginx
 
 - name: define lxc_vm_states
   set_fact:
      lxc_vm_states: "{{ lxc_vm_states_12 }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
+  tags:
+      - config
+      - nginx
 
 - name: create lxc vm
   shell: lxc-create -t {{ item.item.type }} -n {{ item.item.name }} -- -r {{ item.item.revision }}
@@ -144,6 +156,7 @@
   when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
   tags:
       - config
+      - nginx
 
 - name: enable nginx lxc config if required
   file: state=link src=../sites-available/lxc-{{ item.item.name }}.conf dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
