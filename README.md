@@ -28,7 +28,7 @@ You can define your containers in ```lxc_vms```, they will be automatically crea
 ```yml
 lxc_vms:
   - { name: "test1", type: "ubuntu", revision: "trusty",  servername: "test1.example.com", http_port: 5000, https: on }
-  - { name: "test2", type: "ubuntu", revision: "precise", servername: "test2.example.com", http_port: 80,   https: off }
+  - { name: "test2", type: "ubuntu", revision: "precise", servername: "test2.example.com", http_port: 80,   https: off, client_max_body_size: "50m" }
   - { name: "test3", type: "ubuntu", revision: "precise", no_nginx: true}
 
 ```
