@@ -125,7 +125,7 @@
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: install python"
-  shell: "lxc-attach -n {{ item.item.name }} -- python --version || /usr/bin/apt-get install -y python"
+  shell: "lxc-attach -n {{ item.item.name }} -- python --version || lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   retries: 5
