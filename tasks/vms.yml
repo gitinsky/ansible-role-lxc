@@ -100,11 +100,15 @@
 
 - name: "lxc container: create .ssh"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 750 -d ~{{ ansible_ssh_user }}/.ssh"
+  args:
+    executable: "/bin/bash"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: install .ssh/authorized_keys"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ ansible_ssh_user }}\" -g \"{{ ansible_ssh_user }}\" -m 640 /dev/null ~{{ ansible_ssh_user }}/.ssh/authorized_keys"
+  args:
+    executable: "/bin/bash"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
 
