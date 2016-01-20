@@ -5,7 +5,7 @@
   register: lxc_vm_states_14
   changed_when: false
   with_items: lxc_vms
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8')"
   tags:
       - config
       - nginx
@@ -25,7 +25,7 @@
 - name: define lxc_vm_states
   set_fact:
      lxc_vm_states: "{{ lxc_vm_states_14 }}"
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8')"
   tags:
       - config
       - nginx
