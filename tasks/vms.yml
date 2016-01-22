@@ -153,6 +153,15 @@
 - include: vmstates.yml
 
 #===  nginx stuff
+- name: put lxc-letsencrypt nginx config if required
+  template: src=nginx/lxc-letsencrypt.conf dest=/etc/nginx/lxc-letsencrypt.conf
+  notify: reload nginx
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false ) and item.item.letsencrypt is defined and item.item.letsencrypt"
+  tags:
+      - config
+      - nginx
+
 - name: put nginx lxc config if required
   template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
   notify: reload nginx
