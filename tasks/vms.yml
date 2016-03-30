@@ -88,6 +88,11 @@
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
 
 #== install user
+- name: "lxc container: install sudo package"
+  shell: "lxc-attach -n {{ item.item.name }} -- yum -y install sudo"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and ansible_os_family=='RedHat'"
+
 - name: "lxc container: install sudoers file"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -m 440 /dev/null /etc/sudoers.d/wheel-nopasswd"
   with_items: lxc_vm_states.results
