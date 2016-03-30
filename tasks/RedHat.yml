@@ -1,0 +1,29 @@
+---
+- name: install lxc
+  yum: name={{ item }} state=latest
+  with_items:
+      - lxc
+  tags:
+      - install
+
+- name: install lxc-templates
+  yum: name={{ item }} state=latest
+  with_items:
+      - lxc-templates
+  tags:
+      - install
+  ignore_errors: True
+
+- name: install libvirt
+  yum: name={{ item }} state=latest
+  with_items:
+      - libvirt
+  tags:
+      - install
+  ignore_errors: True
+
+- debug: var=lxc_vms
+  tags: debug
+
+- include: vms.yml
+  when: lxc_vms.0 is defined
