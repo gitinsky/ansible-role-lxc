@@ -143,12 +143,17 @@
 - name: "lxc container: add user to group wheel"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/addgroup {{ lookup('env', 'USER') }} wheel"
   with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout"
+  when: "'RUNNING' in item.stdout and ansible_os_family=='Debian'"
+
+- name: "lxc container: add user to group wheel"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/usermod -a -G wheel {{ lookup('env', 'USER') }}"
+  with_items: lxc_vm_states.results
+  when: "'RUNNING' in item.stdout and ansible_os_family=='RedHat'"
 
 - name: "lxc container: install python"
   shell: "lxc-attach -n {{ item.item.name }} -- python --version || lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
   with_items: lxc_vm_states.results
-  when: "'RUNNING' in item.stdout"
+  when: "'RUNNING' in item.stdout and ansible_os_family=='Debian'"
   retries: 5
 
 #=== remove user ubuntu
