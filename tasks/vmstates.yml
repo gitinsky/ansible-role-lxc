@@ -2,13 +2,13 @@
 - name: check vm state
   shell: "{ lxc-info -n {{ item.name }}|grep -v 'IP:' && grep \" $( grep lxc.network.hwaddr /var/lib/lxc/{{ item.name }}/config|sed -E 's/.*=[ ]{0,}//' ) \" /var/lib/misc/dnsmasq.*leases|awk '{ print \"IP: \" $3}'; } | column -t"
   failed_when: false
-  register: lxc_vm_states_14
+  register: lxc_vm_states_not12
   changed_when: false
   with_items: lxc_vms
   tags:
     - config
     - sshconf
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  when: "ansible_distribution == 'Ubuntu' and (ansible_distribution_version == '14.04' or ansible_distribution_version == '16.04')"
 
 - name: check vm state
   shell: "{ lxc-info -n {{ item.name }} && grep ' {{ item.name }} ' /var/lib/misc/dnsmasq.leases|awk '{ print \"IP: \" $3}'; } | column -t"
@@ -24,8 +24,8 @@
 
 - name: define lxc_vm_states
   set_fact:
-     lxc_vm_states: "{{ lxc_vm_states_14 }}"
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+     lxc_vm_states: "{{ lxc_vm_states_not12 }}"
+  when: "ansible_distribution == 'Ubuntu' and (ansible_distribution_version == '14.04' or ansible_distribution_version == '16.04')"
   tags: 
     - config
     - sshconf
