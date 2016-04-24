@@ -112,6 +112,9 @@
   when: "'RUNNING' in item.stdout"
   failed_when: false
 
+- name: print user name
+  debug: var={{ lookup('env', 'USER') }}
+
 - name: "lxc container: useradd"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/useradd -m -c \"{{ lookup('env', 'USER') }}@$(hostname)\" -s /bin/bash {{ lookup('env', 'USER') }}"
   with_items: lxc_vm_states.results
@@ -119,7 +122,7 @@
   failed_when: false
 
 - name: "lxc container: create .ssh"
-  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ lookup('env', 'USER') }}\" -g \"{{ lookup('env', 'USER') }}\" -m 750 -d ~{{ lookup('env', 'USER') }}/.ssh"
+  shell: "lxc-attach -n {{ item.item.name }} -- bash -c \"/usr/bin/install -v -o \\\"{{ lookup('env', 'USER') }}\\\" -g \\\"{{ lookup('env', 'USER') }}\\\" -m 750 -d ~{{ lookup('env', 'USER') }}/.ssh\""
   args:
     executable: "/bin/bash"
   with_items: lxc_vm_states.results
@@ -186,6 +189,9 @@
   tags:
       - config
       - nginx
+
+- name: print vm states
+  debug: var=lxc_vm_states
 
 - name: put nginx lxc config if required
   template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
