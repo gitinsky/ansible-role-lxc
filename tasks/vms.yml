@@ -8,10 +8,10 @@
 - name: check if vm exists
   shell: lxc-info -n {{ item.name }}
   failed_when: false
-  register: lxc_vm_states_14
+  register: lxc_vm_states_not12
   changed_when: false
   with_items: lxc_vms
-  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or (ansible_distribution=='RedHat')"
+  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '16.04') or (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or (ansible_distribution=='RedHat')"
   tags:
       - config
       - nginx
@@ -30,8 +30,8 @@
 
 - name: define lxc_vm_states
   set_fact:
-     lxc_vm_states: "{{ lxc_vm_states_14 }}"
-  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or (ansible_distribution == 'RedHat')"
+     lxc_vm_states: "{{ lxc_vm_states_not12 }}"
+  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '16.04') or (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or (ansible_distribution == 'RedHat')"
   tags:
       - config
       - nginx
@@ -43,6 +43,9 @@
   tags:
       - config
       - nginx
+
+- name: print vm states
+  debug: var=lxc_vm_states
 
 - name: create lxc vm
   shell: lxc-create -t {{ item.item.type }} -n {{ item.item.name }} -- -r {{ item.item.revision }}
