@@ -112,31 +112,44 @@
   when: "'RUNNING' in item.stdout"
   failed_when: false
 
+- name: print Ansible user name
+  debug: msg="Ansible user {{ ansible_user_id }}"
+
 - name: print user name
-  debug: var={{ lookup('env', 'USER') }}
+  debug: msg="Env user {{ lookup('env', 'USER') }}"
+
+- name: set lxc_vm_user
+  set_fact:
+     lxc_vm_user: "{{ ansible_user_id }}"
+  when: "not use_vm_user_from_env"
+
+- name: set lxc_vm_user
+  set_fact:
+     lxc_vm_user: "{{ lookup('env', 'USER') }}"
+  when: "use_vm_user_from_env"
 
 - name: "lxc container: useradd"
-  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/useradd -m -c \"{{ lookup('env', 'USER') }}@$(hostname)\" -s /bin/bash {{ lookup('env', 'USER') }}"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/useradd -m -c \"{{ lxc_vm_user }}@$(hostname)\" -s /bin/bash {{ lxc_vm_user }}"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
   failed_when: false
 
 - name: "lxc container: create .ssh"
-  shell: "lxc-attach -n {{ item.item.name }} -- bash -c \"/usr/bin/install -v -o \\\"{{ lookup('env', 'USER') }}\\\" -g \\\"{{ lookup('env', 'USER') }}\\\" -m 750 -d ~{{ lookup('env', 'USER') }}/.ssh\""
+  shell: "lxc-attach -n {{ item.item.name }} -- bash -c \"/usr/bin/install -v -o \\\"{{ lxc_vm_user }}\\\" -g \\\"{{ lxc_vm_user }}\\\" -m 750 -d ~{{ lxc_vm_user }}/.ssh\""
   args:
     executable: "/bin/bash"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: install .ssh/authorized_keys"
-  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ lookup('env', 'USER') }}\" -g \"{{ lookup('env', 'USER') }}\" -m 640 /dev/null ~{{ lookup('env', 'USER') }}/.ssh/authorized_keys"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ lxc_vm_user }}\" -g \"{{ lxc_vm_user }}\" -m 640 /dev/null ~{{ lxc_vm_user }}/.ssh/authorized_keys"
   args:
     executable: "/bin/bash"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: get home dir of a user"
-  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c \"getent passwd {{ lookup('env', 'USER') }} | cut -d: -f6\""
+  shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c \"getent passwd {{ lxc_vm_user }} | cut -d: -f6\""
   register: ssh_user_home_dir
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout"
@@ -147,12 +160,12 @@
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: add user to group wheel"
-  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/addgroup {{ lookup('env', 'USER') }} wheel"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/addgroup {{ lxc_vm_user }} wheel"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout and ansible_os_family=='Debian'"
 
 - name: "lxc container: add user to group wheel"
-  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/usermod -a -G wheel {{ lookup('env', 'USER') }}"
+  shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/usermod -a -G wheel {{ lxc_vm_user }}"
   with_items: lxc_vm_states.results
   when: "'RUNNING' in item.stdout and ansible_os_family=='RedHat'"
 

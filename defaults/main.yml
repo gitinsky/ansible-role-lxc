@@ -4,3 +4,4 @@ lxc_minimal_kernel_version: "3.5"
 wait_for_reboot: 45
 lxc_force_skip_nginx_for_all_vms: false
 generate_sshconf: yes
+use_vm_user_from_env: true
