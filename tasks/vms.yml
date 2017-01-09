@@ -287,12 +287,12 @@
 
 - name: create local directory ~/.ssh/config.d
   local_action: file dest=~/.ssh/config.d state=directory
-  sudo: no
+  become: no
   tags: sshconf
   when: generate_sshconf
   
 - name: add proxy commands for vms
   local_action: template src=ssh/lxc.conf.jinja dest=~/.ssh/config.d/lxc-{{ inventory_hostname }}.conf
-  sudo: no
+  become: no
   tags: sshconf
   when: generate_sshconf
