@@ -6,11 +6,11 @@
   package: name=debootstrap state=present
 
 - name: check if vm exists
-  shell: lxc-info -n {{ item.name }}
+  shell: lxc-info -n "{{ item.name }}"
   failed_when: false
   register: lxc_vm_states_not12
   changed_when: false
-  with_items: lxc_vms
+  with_items: "{{ lxc_vms }}"
   when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '16.04') or (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or (ansible_distribution=='RedHat')"
   tags:
       - config
@@ -21,7 +21,7 @@
   failed_when: false
   register: lxc_vm_states_12
   changed_when: false
-  with_items: lxc_vms
+  with_items: "{{ lxc_vms }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
   tags:
       - config
@@ -49,13 +49,13 @@
 
 - name: create lxc vm
   shell: lxc-create -t {{ item.item.type }} -n {{ item.item.name }} -- -r {{ item.item.revision }}
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   register: lxc_vm_creation
   when: "'doesn\\'t exist' in item.stderr and ansible_os_family=='Debian'"
 
 - name: create lxc vm
   shell: lxc-create -t {{ item.item.type }} -n {{ item.item.name }} -- -R {{ item.item.revision }}
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   register: lxc_vm_creation
   when: "'doesn\\'t exist' in item.stderr and ansible_os_family=='RedHat'"
 
@@ -64,11 +64,11 @@
   failed_when: false
   register: lxc_vm_states
   changed_when: false
-  with_items: lxc_vms
+  with_items: "{{ lxc_vms }}"
 
 - name: start lxc vm
   shell: lxc-start -n {{ item.item.name }} -d
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' not in item.stdout"
   register: lxc_vm_start
   failed_when: "'The container failed to start' in lxc_vm_start.stderr"
@@ -77,38 +77,38 @@
 
 - name: autostart all the VMs, seem to be broken
   shell: lxc-autostart -n {{ item.item.name }}
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
   
 - name: enable autostart in a VM config file
   lineinfile: dest=/var/lib/lxc/{{ item.item.name }}/config regexp=^lxc.start.auto line="lxc.start.auto = 1"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
 
 - name: autostart all the VMs
   file: state=link src=/var/lib/lxc/{{ item.item.name }}/config dest=/etc/lxc/auto/{{ item.item.name }}
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '12.04'"
 
 #== install user
 - name: "lxc container: install sudo package"
   shell: "lxc-attach -n {{ item.item.name }} -- yum -y install sudo"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and ansible_os_family=='RedHat'"
 
 - name: "lxc container: install sudoers file"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -m 440 /dev/null /etc/sudoers.d/wheel-nopasswd"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: fill in the sudoers file"
   shell: "echo '%wheel        ALL=(ALL) NOPASSWD: ALL' > /var/lib/lxc/{{ item.item.name }}/rootfs/etc/sudoers.d/wheel-nopasswd"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: groupadd wheel"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/groupadd wheel"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
   failed_when: false
 
@@ -130,7 +130,7 @@
 
 - name: "lxc container: useradd"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/useradd -m -c \"{{ lxc_vm_user }}@$(hostname)\" -s /bin/bash {{ lxc_vm_user }}"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
   failed_when: false
 
@@ -138,40 +138,40 @@
   shell: "lxc-attach -n {{ item.item.name }} -- bash -c \"/usr/bin/install -v -o \\\"{{ lxc_vm_user }}\\\" -g \\\"{{ lxc_vm_user }}\\\" -m 750 -d ~{{ lxc_vm_user }}/.ssh\""
   args:
     executable: "/bin/bash"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: install .ssh/authorized_keys"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/bin/install -v -o \"{{ lxc_vm_user }}\" -g \"{{ lxc_vm_user }}\" -m 640 /dev/null ~{{ lxc_vm_user }}/.ssh/authorized_keys"
   args:
     executable: "/bin/bash"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: get home dir of a user"
   shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c \"getent passwd {{ lxc_vm_user }} | cut -d: -f6\""
   register: ssh_user_home_dir
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: fill in .ssh/authorized_keys"
   shell: "echo {{ lookup('file', '~/.ssh/id_rsa.pub') }} >  /var/lib/lxc/{{ item.item.name }}/rootfs{{ ssh_user_home_dir.results[0].stdout }}/.ssh/authorized_keys"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: add user to group wheel"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/addgroup {{ lxc_vm_user }} wheel"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and ansible_os_family=='Debian'"
 
 - name: "lxc container: add user to group wheel"
   shell: "lxc-attach -n {{ item.item.name }} -- /usr/sbin/usermod -a -G wheel {{ lxc_vm_user }}"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and ansible_os_family=='RedHat'"
 
 - name: "lxc container: install python"
   shell: "lxc-attach -n {{ item.item.name }} -- python --version || lxc-attach -n {{ item.item.name }} -- /usr/bin/apt-get install -y python"
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and ansible_os_family=='Debian'"
   retries: 5
 
@@ -180,13 +180,13 @@
 - name: "lxc container: kill all processes under 'ubuntu' user"
   shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/null 2>&1 && /bin/ps -u ubuntu| /bin/sed 1d| while read pid s; do echo \"pid=$pid\"; kill -9 $pid; done'"
   failed_when: false
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 - name: "lxc container: remove user ubuntu"
   shell: "lxc-attach -n {{ item.item.name }} -- /bin/bash -c '/usr/bin/id -u ubuntu > /dev/null 2>&1 && /usr/sbin/userdel -rf ubuntu'"
   failed_when: false
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout"
 
 #=== recollect VM info as IP addresses could have been missed in the first check
@@ -197,7 +197,7 @@
 - name: put lxc-letsencrypt nginx config if required
   template: src=nginx/lxc-letsencrypt.conf dest=/etc/nginx/lxc-letsencrypt.conf
   notify: reload nginx
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false ) and item.item.letsencrypt is defined and item.item.letsencrypt"
   tags:
       - config
@@ -209,7 +209,7 @@
 - name: put nginx lxc config if required
   template: src=nginx/lxc.conf dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
   notify: reload nginx
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
   tags:
       - config
@@ -218,7 +218,7 @@
 - name: enable nginx lxc config if required
   file: state=link src=../sites-available/lxc-{{ item.item.name }}.conf dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
   notify: reload nginx
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false )"
   tags:
       - config
@@ -226,7 +226,7 @@
 - name: ensure nginx configs are not enabled if configured so
   file: state=absent dest=/etc/nginx/sites-enabled/lxc-{{ item.item.name }}.conf
   notify: reload nginx
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
   tags:
       - config
@@ -234,7 +234,7 @@
 - name: ensure nginx configs are to presented if configured so
   file: state=absent dest=/etc/nginx/sites-available/lxc-{{ item.item.name }}.conf
   notify: reload nginx
-  with_items: lxc_vm_states.results
+  with_items: "{{ lxc_vm_states.results }}"
   when: "'RUNNING' in item.stdout and ( lxc_force_skip_nginx_for_all_vms == true or ( item.item.no_nginx is defined and item.item.no_nginx == true ))"
   tags:
       - config
