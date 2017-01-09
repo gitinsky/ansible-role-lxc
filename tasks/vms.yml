@@ -60,7 +60,7 @@
   when: "'doesn\\'t exist' in item.stderr and ansible_os_family=='RedHat'"
 
 - name: check vm state
-  shell: lxc-info -n {{ item.name }}
+  shell: lxc-info -n "{{ item.name }}"
   failed_when: false
   register: lxc_vm_states
   changed_when: false
@@ -118,12 +118,12 @@
 - name: print user name
   debug: msg="Env user {{ lookup('env', 'USER') }}"
 
-- name: set lxc_vm_user
+- name: set lxc_vm_user (to ansible_user_id)
   set_fact:
      lxc_vm_user: "{{ ansible_user_id }}"
   when: "not use_vm_user_from_env"
 
-- name: set lxc_vm_user
+- name: set lxc_vm_user (to a user from env)
   set_fact:
      lxc_vm_user: "{{ lookup('env', 'USER') }}"
   when: "use_vm_user_from_env"
