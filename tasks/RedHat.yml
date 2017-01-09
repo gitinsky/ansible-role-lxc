@@ -26,4 +26,4 @@
   tags: debug
 
 - include: vms.yml
-  when: lxc_vms.0 is defined
+  when: "lxc_vms.0 is defined"
