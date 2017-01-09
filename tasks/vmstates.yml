@@ -4,7 +4,7 @@
   failed_when: false
   register: lxc_vm_states_not12
   changed_when: false
-  with_items: lxc_vms
+  with_items: "{{ lxc_vms }}"
   tags:
     - config
     - sshconf
@@ -15,7 +15,7 @@
   failed_when: false
   register: lxc_vm_states_12
   changed_when: false
-  with_items: lxc_vms
+  with_items: "{{ lxc_vms }}"
   tags: 
     - config
     - sshconf
