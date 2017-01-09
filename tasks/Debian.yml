@@ -39,7 +39,7 @@
   tags: debug
 
 - include: vms.yml
-  when: lxc_vms.0 is defined
+  when: "lxc_vms.0 is defined"
 
 - name: set lxc domain if required
   lineinfile: dest=/etc/default/lxc-net regexp=^LXC_DOMAIN line="LXC_DOMAIN=\"{{ lxc_domain }}\""
