@@ -83,7 +83,7 @@
 - name: enable autostart in a VM config file
   lineinfile: dest=/var/lib/lxc/{{ item.item.name }}/config regexp=^lxc.start.auto line="lxc.start.auto = 1"
   with_items: "{{ lxc_vm_states.results }}"
-  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
+  when: "(ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or (ansible_distribution == 'Ubuntu' and (ansible_distribution_version|version_compare(12.04, '>')))"
 
 - name: autostart all the VMs
   file: state=link src=/var/lib/lxc/{{ item.item.name }}/config dest=/etc/lxc/auto/{{ item.item.name }}
