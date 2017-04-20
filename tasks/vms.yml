@@ -203,6 +203,24 @@
       - config
       - nginx
 
+- name: generate nginx dhparams if required
+  shell: openssl dhparam -out /etc/ssl/certs/dhparams.pem 4096 creates=/etc/ssl/certs/dhparams.pem
+  notify: reload nginx
+  with_items: "{{ lxc_vm_states.results }}"
+  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false ) and item.item.letsencrypt is defined and item.item.letsencrypt"
+  tags:
+      - config
+      - nginx
+
+- name: set 0600 on /etc/ssl/certs/dhparams.pem
+  file: dest=/etc/ssl/certs/dhparams.pem mode=0600
+  notify: reload nginx
+  with_items: "{{ lxc_vm_states.results }}"
+  when: "'RUNNING' in item.stdout and lxc_force_skip_nginx_for_all_vms == false and ( item.item.no_nginx is not defined or item.item.no_nginx == false ) and item.item.letsencrypt is defined and item.item.letsencrypt"
+  tags:
+      - config
+      - nginx
+
 - name: print vm states
   debug: var=lxc_vm_states
 
