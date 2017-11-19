@@ -24,7 +24,7 @@ You might find [certificates](https://github.com/gitinsky/ansible-role-certifica
 #### playbook with self-signed certificates
 ```yml
 - hosts: lxcs
-  sudo: yes
+  become: yes
   roles:
     - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test1.example.com } 
     - { role: certificates, ssl_cert_root: /etc/ssl, ssl_name: test2.example.com } 
@@ -34,7 +34,7 @@ You might find [certificates](https://github.com/gitinsky/ansible-role-certifica
 #### playbook with letsencrypt certificates
 ```yml
 - hosts: lxcs
-  sudo: yes
+  become: yes
   roles:
     - { role: lxc, tags: lxc }
     - { role: letsencrypt, tags: cert } 
