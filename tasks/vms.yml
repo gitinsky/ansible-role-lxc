@@ -73,7 +73,7 @@
   register: lxc_vm_start
   failed_when: "'The container failed to start' in lxc_vm_start.stderr"
 
-- include: vmstates.yml
+- include_tasks: vmstates.yml
 
 - name: autostart all the VMs, seem to be broken
   shell: lxc-autostart -n {{ item.item.name }}
@@ -191,7 +191,7 @@
 
 #=== recollect VM info as IP addresses could have been missed in the first check
 
-- include: vmstates.yml
+- include_tasks: vmstates.yml
 
 #===  nginx stuff
 - name: put lxc-letsencrypt nginx config if required
