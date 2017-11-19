@@ -1,9 +1,9 @@
 # RedHat specific package installations
-- include: RedHat.yml
+- include_tasks: RedHat.yml
   static: no
   when: ansible_os_family  == "RedHat"
 
 # Debian specific package installations
-- include: Debian.yml
+- include_tasks: Debian.yml
   static: no
   when: "ansible_os_family == 'Debian' or ansible_os_family == 'Linuxmint'"

@@ -25,5 +25,5 @@
 - debug: var=lxc_vms
   tags: debug
 
-- include: vms.yml
+- include_tasks: vms.yml
   when: "lxc_vms.0 is defined"

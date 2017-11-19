@@ -17,5 +17,4 @@
   register: kernelup
 
 #  state=latest
-- include: kernel_update_reboot.yml
-  
+- include_tasks: kernel_update_reboot.yml

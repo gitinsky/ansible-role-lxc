@@ -6,7 +6,7 @@
       - install
       
 - name: update kernel
-  include: kernel_check_and_update.yml
+  include_tasks: kernel_check_and_update.yml
   when: update_kernel_if_required
   tags: debug
 
@@ -38,7 +38,7 @@
 - debug: var=lxc_vms
   tags: debug
 
-- include: vms.yml
+- include_tasks: vms.yml
   when: "lxc_vms.0 is defined"
 
 - name: set lxc domain if required
