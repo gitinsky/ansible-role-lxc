@@ -2,6 +2,6 @@
 - name: restart lxc-net service
   service: name=lxc-net state=restarted
   notify: hup dnsmasq
-  
+
 - name: hup dnsmasq
   shell: killall -s SIGHUP dnsmasq
