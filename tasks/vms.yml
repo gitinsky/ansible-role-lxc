@@ -18,10 +18,12 @@
   tags:
       - config
       - nginx
-  
+
 - name: check if vm exists
-  shell: lxc-ls -1|grep '^{{ item.name }}$'|| echo "{{ item.name }} doesn't exist" >&2
+  shell: set -o pipefail && lxc-ls -1|grep '^{{ item.name }}$'|| echo "{{ item.name }} doesn't exist" >&2
   failed_when: false
+  args:
+      executable: /bin/bash
   register: lxc_vm_states_12
   changed_when: false
   with_items: "{{ lxc_vms }}"
@@ -82,7 +84,7 @@
   shell: lxc-autostart -n {{ item.item.name }}
   with_items: "{{ lxc_vm_states.results }}"
   when: "ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04'"
-  
+
 - name: enable autostart in a VM config file
   lineinfile: dest=/var/lib/lxc/{{ item.item.name }}/config regexp=^lxc.start.auto line="lxc.start.auto = 1"
   with_items: "{{ lxc_vm_states.results }}"
@@ -292,7 +294,7 @@
 #     ssh_config_line_domains: "{{ ssh_config_line_domains|replace(item.name,item.servername) }}"
 #   with_items: lxc_vms
 #   tags: report
-  
+
 - name: report VMs addresses
   debug: var=lxc_vm_ips.stdout_lines
   tags: report
@@ -311,7 +313,7 @@
   become: no
   tags: sshconf
   when: generate_sshconf
-  
+
 - name: add proxy commands for vms
   local_action: template src=ssh/lxc.conf.jinja dest=~/.ssh/config.d/lxc-{{ inventory_hostname }}.conf
   become: no
