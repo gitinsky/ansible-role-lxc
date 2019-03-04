@@ -1,13 +1,13 @@
 ---
 - name: install lxc
-  yum: name={{ item }} state=latest
+  yum: name={{ item }}
   with_items:
       - lxc
   tags:
       - install
 
 - name: install lxc-templates
-  yum: name={{ item }} state=latest
+  yum: name={{ item }}
   with_items:
       - lxc-templates
   tags:
@@ -15,7 +15,7 @@
   ignore_errors: True
 
 - name: install libvirt
-  yum: name={{ item }} state=latest
+  yum: name={{ item }}
   with_items:
       - libvirt
   tags:

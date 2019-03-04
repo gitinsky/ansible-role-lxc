@@ -4,29 +4,29 @@
   ignore_errors: True
   tags:
       - install
-      
+
 - name: update kernel
   include_tasks: kernel_check_and_update.yml
   when: update_kernel_if_required
   tags: debug
 
 - name: install deps
-  apt: name={{ item }} state=latest
+  apt: name={{ item }}
   with_items:
       - lxc
   tags:
       - install
-  
+
 - name: install deps
-  apt: name={{ item }} state=latest
+  apt: name={{ item }}
   with_items:
       - lxc-templates
   tags:
-      - install    
+      - install
   ignore_errors: True
 
 - name: install specific deps
-  apt: name={{ item }} state=latest
+  apt: name={{ item }}
   with_items:
       - libvirt-daemon-lxc
       - libvirt

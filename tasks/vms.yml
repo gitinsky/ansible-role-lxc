@@ -6,12 +6,15 @@
   package: name=debootstrap state=present
 
 - name: check if vm exists
-  shell: lxc-info -n "{{ item.name }}"
+  command: lxc-info -n "{{ item.name }}"
   failed_when: false
   register: lxc_vm_states_not12
   changed_when: false
   with_items: "{{ lxc_vms }}"
-  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '16.04') or (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or (ansible_distribution=='RedHat')"
+  when: "(ansible_distribution == 'Ubuntu' and ansible_distribution_version == '16.04') or
+         (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '14.04') or
+         (ansible_distribution == 'Debian' and ansible_distribution_major_version == '8') or
+         (ansible_distribution=='RedHat')"
   tags:
       - config
       - nginx

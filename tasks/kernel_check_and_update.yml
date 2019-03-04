@@ -7,7 +7,7 @@
 
 - name: Shall I update kernel?
   debug: var={{ ansible_kernel | version_compare(lxc_minimal_kernel_version, '<') }}
-  
+
 - name: update kernel
   apt: name={{ item }}
   with_items:
